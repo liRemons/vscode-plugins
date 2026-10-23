@@ -1,0 +1,66 @@
+/* 只读预览 / 可视化编辑双模式的容器与切换按钮样式 */
+
+/* 只读预览：独立滚动，不渲染编辑器 */
+.preview-only {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+}
+
+.preview-only-content {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 40px 96px;
+}
+
+/* RenderMarkdown 根节点默认自带主题底色，预览模式下改为透明，
+   与 VSCode 编辑区背景融合，避免出现居中的色带 */
+.preview-only .markdown {
+  background: transparent;
+}
+
+/* 可视化编辑：让组件铺满面板 */
+.edit-mode {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.edit-mode > .markdown-editor-app {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+}
+
+/* 右下角悬浮的模式切换按钮 */
+.mode-toggle {
+  position: fixed;
+  right: 20px;
+  bottom: 24px;
+  z-index: 1000;
+  min-width: 64px;
+  padding: 6px 16px;
+  border: 1px solid var(--vscode-button-border, transparent);
+  border-radius: 16px;
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  font-family: var(--vscode-font-family);
+  font-size: 12px;
+  line-height: 1.4;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+}
+
+.mode-toggle:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.mode-toggle:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 2px;
+}

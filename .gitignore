@@ -1,0 +1,17 @@
+# 依赖
+node_modules/
+
+# 构建产物与打包产物
+dist/
+*.vsix
+
+# 日志
+*.log
+npm-debug.log*
+
+# 编辑器 / 系统文件
+.DS_Store
+Thumbs.db
+
+# 工具临时目录
+.harness/

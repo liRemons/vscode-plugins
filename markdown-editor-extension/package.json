@@ -1,0 +1,175 @@
+{
+  "name": "markdown-editor-extension",
+  "displayName": "Remons Markdown Editor",
+  "description": "基于 React 组件 remons-markdown-editor 的 VSCode Markdown 可视化编辑器（Custom Editor）",
+  "version": "0.0.1",
+  "publisher": "remons",
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/liRemons/markdown-editor.git"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Editors",
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "remons.markdownEditor",
+        "displayName": "Remons Markdown Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.md"
+          },
+          {
+            "filenamePattern": "*.markdown"
+          }
+        ],
+        "priority": "default"
+      }
+    ],
+    "commands": [
+      {
+        "command": "remonsMarkdownEditor.openPreview",
+        "title": "Remons Markdown: 以可视化编辑器打开",
+        "icon": {
+          "light": "media/icon-preview-light.svg",
+          "dark": "media/icon-preview-dark.svg"
+        }
+      },
+      {
+        "command": "remonsMarkdownEditor.openSource",
+        "title": "Remons Markdown: 以文本编辑器打开",
+        "icon": {
+          "light": "media/icon-source-light.svg",
+          "dark": "media/icon-source-dark.svg"
+        }
+      },
+      {
+        "command": "remonsMarkdownEditor.modePreview",
+        "title": "Remons Markdown: 切换到预览",
+        "enablement": "remonsMarkdownEditorActive",
+        "icon": {
+          "light": "media/icon-preview-light.svg",
+          "dark": "media/icon-preview-dark.svg"
+        }
+      },
+      {
+        "command": "remonsMarkdownEditor.modeEdit",
+        "title": "Remons Markdown: 切换到编辑",
+        "enablement": "remonsMarkdownEditorActive",
+        "icon": {
+          "light": "media/icon-edit-light.svg",
+          "dark": "media/icon-edit-dark.svg"
+        }
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "remonsMarkdownEditor.modeEdit",
+          "when": "remonsMarkdownEditorActive && remonsMarkdownEditorMode != edit",
+          "group": "navigation@1"
+        },
+        {
+          "command": "remonsMarkdownEditor.modePreview",
+          "when": "remonsMarkdownEditorActive && remonsMarkdownEditorMode == edit",
+          "group": "navigation@1"
+        },
+        {
+          "command": "remonsMarkdownEditor.openSource",
+          "when": "remonsMarkdownEditorActive",
+          "group": "navigation@2"
+        },
+        {
+          "command": "remonsMarkdownEditor.openPreview",
+          "when": "editorLangId == markdown && !remonsMarkdownEditorActive",
+          "group": "navigation@1"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "remonsMarkdownEditor.modeEdit",
+          "when": "remonsMarkdownEditorActive && remonsMarkdownEditorMode != edit"
+        },
+        {
+          "command": "remonsMarkdownEditor.modePreview",
+          "when": "remonsMarkdownEditorActive && remonsMarkdownEditorMode == edit"
+        },
+        {
+          "command": "remonsMarkdownEditor.openSource",
+          "when": "remonsMarkdownEditorActive"
+        },
+        {
+          "command": "remonsMarkdownEditor.openPreview",
+          "when": "resourceLangId == markdown && !remonsMarkdownEditorActive"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "remonsMarkdownEditor.openPreview",
+          "when": "resourceExtname == .md || resourceExtname == .markdown"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Remons Markdown Editor",
+      "properties": {
+        "remonsMarkdownEditor.defaultMode": {
+          "type": "string",
+          "enum": [
+            "preview",
+            "edit"
+          ],
+          "enumDescriptions": [
+            "只读预览：仅渲染 Markdown，不可编辑",
+            "可视化编辑：CodeMirror 编辑 + 实时预览"
+          ],
+          "default": "preview",
+          "description": "打开 Markdown 文件时默认进入的视图模式"
+        },
+        "remonsMarkdownEditor.showPreview": {
+          "type": "boolean",
+          "default": true,
+          "description": "是否显示实时预览面板"
+        },
+        "remonsMarkdownEditor.fullscreen": {
+          "type": "boolean",
+          "default": false,
+          "description": "是否显示全屏按钮"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "node esbuild.js --production",
+    "watch": "node esbuild.js --watch",
+    "compile": "tsc --noEmit -p ./",
+    "check-types": "tsc --noEmit -p ./",
+    "package": "vsce package"
+  },
+  "dependencies": {
+    "highlight.js": "^11.12.0",
+    "katex": "^0.18.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remons-markdown-editor": "^1.0.0-beta.24",
+    "remons-render-markdown": "^1.0.28-beta.14"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.2.1",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.0"
+  }
+}

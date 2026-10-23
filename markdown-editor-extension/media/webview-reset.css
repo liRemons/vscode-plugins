@@ -1,0 +1,21 @@
+/* Webview 基础复位：让 React 编辑器铺满整个面板并继承 VSCode 主题变量 */
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--vscode-font-family);
+  color: var(--vscode-editor-foreground);
+  background: var(--vscode-editor-background);
+  overflow: hidden;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+}
