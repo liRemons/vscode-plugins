@@ -24,4 +24,4 @@ npx @vscode/vsce package --no-dependencies   # 打包 .vsix
 
 按 **F5** 启动扩展开发宿主进行调试。
 
-> 详细设计、依赖调研与实现说明见 [docs/技术文档.md](./docs/技术文档.md)。
+> 详细设计、依赖调研与实现说明见 [docs/技术文档.md](https://github.com/liRemons/vscode-plugins/blob/main/markdown-editor-extension/docs/%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3.md)。

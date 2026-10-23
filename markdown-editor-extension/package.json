@@ -5,16 +5,25 @@
   "version": "0.0.1",
   "publisher": "remons",
   "icon": "media/icon.png",
+  "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/liRemons/markdown-editor.git"
+    "url": "https://github.com/liRemons/vscode-plugins.git"
   },
+  "keywords": [
+    "markdown",
+    "editor",
+    "preview",
+    "wysiwyg",
+    "katex",
+    "highlight"
+  ],
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": [
-    "Editors",
-    "Other"
+    "Other",
+    "Programming Languages"
   ],
   "activationEvents": [],
   "main": "./dist/extension.js",
