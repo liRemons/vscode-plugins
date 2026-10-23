@@ -1,6 +1,6 @@
 // 必须放在所有 remons-* 包之前：提前挂载本地 KaTeX，避免组件库从 CDN 注入脚本被 CSP 拦截
 import './katex-setup';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MarkdownEditor } from 'remons-markdown-editor';
 import type { MarkdownEditorRef } from 'remons-markdown-editor';
@@ -156,6 +156,34 @@ function App() {
   const [immersive, setImmersive] = useState<boolean>(
     () => savedState.immersive ?? false
   );
+  // 回到顶部按钮监听的实际滚动容器：用 querySelector 定位
+  // - preview：滚动在内容区 .preview-only-content（外层只做 TOC 定位基准）
+  // - edit：滚动发生在组件库预览面板 .preview 内部
+  const queryBackTopTarget = (selector: string) =>
+    document.querySelector<HTMLElement>(selector) ?? undefined;
+
+  // 编辑模式：.preview 面板由 MarkdownEditor 内部晚于首帧创建，而回到顶部组件只在
+  // 挂载时绑定监听容器，之后再更新 backTopTarget 不会重绑。因此先以 showBackTop=false
+  // 渲染，等 querySelector 命中面板后再打开开关，让它首次挂载即绑定正确容器。
+  // undefined = 面板未就绪，null = 无预览面板（沉浸式）
+  const [editBackTop, setEditBackTop] = useState<HTMLElement | null>();
+  useEffect(() => {
+    if (mode !== 'edit') return;
+    setEditBackTop(undefined);
+    const timer = window.setTimeout(() => {
+      setEditBackTop(
+        document.querySelector<HTMLElement>('.edit-mode .preview') ?? null
+      );
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [mode, immersive, config.showPreview]);
+
+  // .preview-only / .preview 是本次渲染才创建的元素，渲染阶段 querySelector 必然查不到；
+  // 提交后强制重渲染一次，让 RenderMarkdown 在容器挂载后才初始化并绑定正确的 backTopTarget
+  const [, forceRender] = useReducer((n: number) => n + 1, 0);
+  useEffect(() => {
+    forceRender();
+  }, [mode, immersive, config.showPreview]);
 
   const editorRef = useRef<MarkdownEditorRef>(null);
   // 权威内容快照：记录当前已知的文档文本，用于识别「外部推送后编辑器回吐的 echo 变更」
@@ -318,11 +346,17 @@ function App() {
     return (
       <div className="preview-only">
         <div className="preview-only-content">
-          <RenderMarkdown
-            content={text}
-            isSlotMermaid
-            defaultCollapsed={false}
-          />
+          {/* backTopTarget 在挂载时即被监听，必须等 querySelector 命中滚动容器后再渲染 */}
+          {queryBackTopTarget('.preview-only-content') && (
+            <RenderMarkdown
+              content={text}
+              isSlotMermaid
+              defaultCollapsed={false}
+              showBackTop
+              showToc
+              backTopTarget={queryBackTopTarget('.preview-only-content')}
+            />
+          )}
         </div>
         <div className="mode-actions">
           <button
@@ -357,8 +391,15 @@ function App() {
         showPreview={config.showPreview && !immersive}
         fullscreen={config.fullscreen}
         // 组件库的 mermaid 渲染是显式开关（内部条件判断无默认值），必须手动开启；
-        // defaultCollapsed=false 让图表默认展开，而不是只显示 36px 标题栏
-        previewOptions={{ isSlotMermaid: true, defaultCollapsed: false }}
+        // defaultCollapsed=false 让图表默认展开，而不是只显示 36px 标题栏；
+        // showBackTop / showToc / backTopTarget 经 previewOptions 透传给内部 RenderMarkdown
+        previewOptions={{
+          isSlotMermaid: true,
+          defaultCollapsed: false,
+          showBackTop: editBackTop !== undefined,
+          showToc: true,
+          backTopTarget: editBackTop ?? undefined,
+        }}
       />
       <div className="mode-actions">
         {config.showPreview && (

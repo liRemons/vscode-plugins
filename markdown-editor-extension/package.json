@@ -214,6 +214,7 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run build",
+    "dev": "node dev.js",
     "build": "node esbuild.js --production",
     "watch": "node esbuild.js --watch",
     "compile": "tsc --noEmit -p ./",

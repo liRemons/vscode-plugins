@@ -1,16 +1,19 @@
 /* 只读预览 / 可视化编辑双模式的容器与切换按钮样式 */
 
-/* 只读预览：独立滚动，不渲染编辑器 */
+/* 只读预览：外层只做定位基准（TOC 按钮/侧边栏固定），滚动在内容区 */
 .preview-only {
   position: relative;
   flex: 1;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
   background: var(--remons-md-editor-bg-primary, var(--vscode-editor-background));
   color: var(--remons-md-editor-color-text, var(--vscode-editor-foreground));
 }
 
 .preview-only-content {
+  height: 100%;
+  box-sizing: border-box;
+  overflow: auto;
   max-width: 960px;
   margin: 0 auto;
   padding: 24px 40px 96px;

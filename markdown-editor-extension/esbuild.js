@@ -61,7 +61,12 @@ async function run() {
   console.log('[esbuild] build complete ->', isProduction ? '(production)' : '(development)');
 }
 
-run().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+// 供 dev.js 复用同一份构建配置
+module.exports = { extensionConfig, webviewConfig };
+
+if (require.main === module) {
+  run().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}
