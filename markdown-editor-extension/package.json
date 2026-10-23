@@ -77,6 +77,24 @@
           "light": "media/icon-edit-light.svg",
           "dark": "media/icon-edit-dark.svg"
         }
+      },
+      {
+        "command": "remonsMarkdownEditor.toggleTheme",
+        "title": "Remons Markdown: 切换深色/浅色主题",
+        "enablement": "remonsMarkdownEditorActive",
+        "icon": {
+          "light": "media/icon-theme-light.svg",
+          "dark": "media/icon-theme-dark.svg"
+        }
+      },
+      {
+        "command": "remonsMarkdownEditor.toggleImmersive",
+        "title": "Remons Markdown: 切换沉浸式编辑",
+        "enablement": "remonsMarkdownEditorActive",
+        "icon": {
+          "light": "media/icon-immersive-light.svg",
+          "dark": "media/icon-immersive-dark.svg"
+        }
       }
     ],
     "menus": {
@@ -95,6 +113,16 @@
           "command": "remonsMarkdownEditor.openSource",
           "when": "remonsMarkdownEditorActive",
           "group": "navigation@2"
+        },
+        {
+          "command": "remonsMarkdownEditor.toggleTheme",
+          "when": "remonsMarkdownEditorActive",
+          "group": "navigation@3"
+        },
+        {
+          "command": "remonsMarkdownEditor.toggleImmersive",
+          "when": "remonsMarkdownEditorActive && remonsMarkdownEditorMode == edit",
+          "group": "navigation@3"
         },
         {
           "command": "remonsMarkdownEditor.openPreview",
@@ -118,6 +146,14 @@
         {
           "command": "remonsMarkdownEditor.openPreview",
           "when": "resourceLangId == markdown && !remonsMarkdownEditorActive"
+        },
+        {
+          "command": "remonsMarkdownEditor.toggleTheme",
+          "when": "remonsMarkdownEditorActive"
+        },
+        {
+          "command": "remonsMarkdownEditor.toggleImmersive",
+          "when": "remonsMarkdownEditorActive"
         }
       ],
       "explorer/context": [
@@ -143,10 +179,30 @@
           "default": "preview",
           "description": "打开 Markdown 文件时默认进入的视图模式"
         },
+        "remonsMarkdownEditor.theme": {
+          "type": "string",
+          "enum": [
+            "dark",
+            "light",
+            "auto"
+          ],
+          "enumDescriptions": [
+            "深色主题（默认）",
+            "浅色主题",
+            "跟随 VSCode 当前主题"
+          ],
+          "default": "dark",
+          "description": "编辑器与预览的主题模式；运行时切换会覆盖此默认值"
+        },
         "remonsMarkdownEditor.showPreview": {
           "type": "boolean",
           "default": true,
           "description": "是否显示实时预览面板"
+        },
+        "remonsMarkdownEditor.immersive": {
+          "type": "boolean",
+          "default": false,
+          "description": "是否默认进入沉浸式编辑（编辑模式下隐藏实时预览面板）"
         },
         "remonsMarkdownEditor.fullscreen": {
           "type": "boolean",
@@ -169,7 +225,7 @@
     "katex": "^0.18.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "remons-markdown-editor": "^1.0.0-beta.24",
+    "remons-markdown-editor": "^1.0.0-beta.25",
     "remons-render-markdown": "^1.0.28-beta.14"
   },
   "devDependencies": {

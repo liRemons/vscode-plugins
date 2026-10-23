@@ -6,8 +6,8 @@
   flex: 1;
   min-height: 0;
   overflow: auto;
-  background: var(--vscode-editor-background);
-  color: var(--vscode-editor-foreground);
+  background: var(--remons-md-editor-bg-primary, var(--vscode-editor-background));
+  color: var(--remons-md-editor-color-text, var(--vscode-editor-foreground));
 }
 
 .preview-only-content {
@@ -17,9 +17,21 @@
 }
 
 /* RenderMarkdown 根节点默认自带主题底色，预览模式下改为透明，
-   与 VSCode 编辑区背景融合，避免出现居中的色带 */
+   与容器背景融合，避免出现居中的色带 */
 .preview-only .markdown {
   background: transparent;
+  color: inherit;
+}
+
+/* Mermaid 节点/连线文字位于 foreignObject 内，会继承 .markdown p 的
+   white-space: pre-line + 22px 行高，导致文字换行后被固定尺寸的节点裁掉，
+   这里在 Mermaid 容器内重置段落样式 */
+.markdown .mermaid-react-root p {
+  margin: 0;
+  white-space: nowrap;
+  word-break: normal;
+  line-height: 1.2;
+  font-size: inherit;
 }
 
 /* 可视化编辑：让组件铺满面板 */
@@ -37,27 +49,58 @@
   height: 100%;
 }
 
-/* 右下角悬浮的模式切换按钮 */
-.mode-toggle {
+/* 沉浸式编辑（showPreview=false）时 Editor 是组件根的直接子节点，
+   其自带 height:100% 会叠加在工具栏高度上溢出容器，改为 flex 分配剩余空间 */
+.edit-mode > .markdown-editor-app > .editor {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
+
+/* 左下角悬浮的操作按钮组（右下角留给 RenderMarkdown 的回到顶部按钮） */
+.mode-actions {
   position: fixed;
-  right: 20px;
+  left: 20px;
   bottom: 24px;
   z-index: 1000;
-  min-width: 64px;
-  padding: 6px 16px;
-  border: 1px solid var(--vscode-button-border, transparent);
-  border-radius: 16px;
-  background: var(--vscode-button-background);
-  color: var(--vscode-button-foreground);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* 悬浮图标按钮：颜色取自组件库主题变量，主题切换时同步生效 */
+.mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  /* 浅色主题下悬浮按钮与编辑区背景接近，补一层细边框（高对比度主题仍优先用 contrastBorder） */
+  border: 1px solid
+    var(--vscode-contrastBorder, var(--vscode-widget-border, rgba(128, 128, 128, 0.35)));
+  border-radius: 50%;
+  background: var(--remons-md-editor-bg-hover, var(--vscode-button-background));
+  color: var(--remons-md-editor-color-text, var(--vscode-button-foreground));
   font-family: var(--vscode-font-family);
-  font-size: 12px;
-  line-height: 1.4;
   cursor: pointer;
+  user-select: none;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
 }
 
+.mode-toggle svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
 .mode-toggle:hover {
-  background: var(--vscode-button-hoverBackground);
+  background: var(--remons-md-editor-bg-active, var(--vscode-button-hoverBackground));
+}
+
+/* 沉浸式开启时保持高亮，便于识别当前状态 */
+.mode-toggle[aria-pressed='true'] {
+  background: var(--remons-md-editor-bg-active, var(--vscode-button-hoverBackground));
 }
 
 .mode-toggle:focus-visible {

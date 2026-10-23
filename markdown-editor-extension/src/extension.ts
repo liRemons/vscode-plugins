@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import {
   EditorConfig,
   ExtensionToWebviewMessage,
+  ThemeMode,
   ViewMode,
   WebviewToExtensionMessage,
 } from './messages';
@@ -11,6 +12,9 @@ const viewType = 'remons.markdownEditor';
 const activeContextKey = 'remonsMarkdownEditorActive';
 // 供 menus.when 判断当前视图模式（preview / edit）的上下文键
 const modeContextKey = 'remonsMarkdownEditorMode';
+// globalState 键：记住用户最近一次的主题 / 沉浸式选择（跨文件、跨会话）
+const themeStateKey = 'remonsMarkdownEditor.theme';
+const immersiveStateKey = 'remonsMarkdownEditor.immersive';
 
 // 所有已打开的可视化编辑器面板，用于维护 activeContextKey
 const editorPanels = new Set<vscode.WebviewPanel>();
@@ -20,6 +24,13 @@ const editorPanelsByUri = new Map<string, vscode.WebviewPanel>();
 function syncActiveContext(): void {
   const hasVisible = Array.from(editorPanels).some((panel) => panel.visible);
   void vscode.commands.executeCommand('setContext', activeContextKey, hasVisible);
+}
+
+/** 向所有已打开的可视化编辑器面板广播消息（主题 / 沉浸式需要多页签保持一致） */
+function broadcastToPanels(message: ExtensionToWebviewMessage): void {
+  for (const panel of editorPanels) {
+    void panel.webview.postMessage(message);
+  }
 }
 
 export function activate(context: vscode.ExtensionContext) {
@@ -69,6 +80,25 @@ export function activate(context: vscode.ExtensionContext) {
     // 标题栏按钮：切换到可视化编辑
     vscode.commands.registerCommand('remonsMarkdownEditor.modeEdit', () =>
       switchActiveEditorMode('edit')
+    ),
+    // 命令面板：切换深/浅色主题（作用于所有已打开的可视化编辑器）
+    vscode.commands.registerCommand('remonsMarkdownEditor.toggleTheme', () => {
+      const current = context.globalState.get<ThemeMode>(
+        themeStateKey,
+        getConfiguredTheme()
+      );
+      const next: ThemeMode = current === 'light' ? 'dark' : 'light';
+      void context.globalState.update(themeStateKey, next);
+      broadcastToPanels({ command: 'setTheme', theme: next });
+    }),
+    // 命令面板：切换沉浸式编辑（隐藏 / 显示预览）
+    vscode.commands.registerCommand(
+      'remonsMarkdownEditor.toggleImmersive',
+      () => {
+        const next = !context.globalState.get<boolean>(immersiveStateKey, false);
+        void context.globalState.update(immersiveStateKey, next);
+        broadcastToPanels({ command: 'setImmersive', immersive: next });
+      }
     )
   );
 }
@@ -148,7 +178,7 @@ class RemonsMarkdownEditorProvider implements vscode.CustomTextEditorProvider {
     // 由 webview 主动发起的编辑写回文档时，跳过一次回环通知，避免编辑器光标被重置
     let suppressNextDocumentChange = false;
     // 当前视图模式：初始值来自配置，之后跟随 webview 上报（保留用户切换结果）
-    let currentMode: ViewMode = getEditorConfig(document.uri).defaultMode;
+    let currentMode: ViewMode = this.getEditorConfig(document.uri).defaultMode;
 
     const syncModeContext = () => {
       if (webviewPanel.visible) {
@@ -165,7 +195,7 @@ class RemonsMarkdownEditorProvider implements vscode.CustomTextEditorProvider {
         const message: ExtensionToWebviewMessage = {
           command,
           text: document.getText(),
-          config: getEditorConfig(document.uri),
+          config: this.getEditorConfig(document.uri),
         };
         webviewPanel.webview.postMessage(message);
         return;
@@ -204,6 +234,20 @@ class RemonsMarkdownEditorProvider implements vscode.CustomTextEditorProvider {
           case 'modeChanged':
             currentMode = message.mode;
             syncModeContext();
+            break;
+          case 'themeChanged':
+            void this.context.globalState.update(themeStateKey, message.theme);
+            broadcastToPanels({ command: 'setTheme', theme: message.theme });
+            break;
+          case 'immersiveChanged':
+            void this.context.globalState.update(
+              immersiveStateKey,
+              message.immersive
+            );
+            broadcastToPanels({
+              command: 'setImmersive',
+              immersive: message.immersive,
+            });
             break;
         }
       }
@@ -249,6 +293,27 @@ class RemonsMarkdownEditorProvider implements vscode.CustomTextEditorProvider {
     }
   }
 
+  /** 读取扩展配置，并用 globalState 中最近一次的主题 / 沉浸式选择覆盖默认值 */
+  private getEditorConfig(resource: vscode.Uri): EditorConfig {
+    const cfg = vscode.workspace.getConfiguration(
+      'remonsMarkdownEditor',
+      resource
+    );
+    return {
+      showPreview: cfg.get<boolean>('showPreview', true),
+      fullscreen: cfg.get<boolean>('fullscreen', false),
+      defaultMode: cfg.get<ViewMode>('defaultMode', 'preview'),
+      theme: this.context.globalState.get<ThemeMode>(
+        themeStateKey,
+        cfg.get<ThemeMode>('theme', 'dark')
+      ),
+      immersive: this.context.globalState.get<boolean>(
+        immersiveStateKey,
+        cfg.get<boolean>('immersive', false)
+      ),
+    };
+  }
+
   private getHtmlForWebview(webview: vscode.Webview): string {
     const scriptUri = webview.asWebviewUri(
       vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'webview', 'main.js')
@@ -270,13 +335,14 @@ class RemonsMarkdownEditorProvider implements vscode.CustomTextEditorProvider {
   <!-- remons 组件库的图标/字体资源来自固定 CDN，需在 CSP 中显式放行：
        at.alicdn.com -> 工具栏 iconfont（行内代码、引用等图标）
        remons.cn:3008 -> 代码块语言图标
-       fonts.gstatic.com -> 组件库默认的 Inter/NotoSansSC 字体 -->
+       fonts.gstatic.com -> 组件库默认的 Inter/NotoSansSC 字体
+       registry.npmmirror.com -> 组件库运行时动态加载 mermaid.min.js -->
   <meta http-equiv="Content-Security-Policy"
         content="default-src 'none';
                  img-src ${cspSource} data: blob: https://remons.cn:3008;
                  style-src ${cspSource} 'unsafe-inline' https://at.alicdn.com;
                  font-src ${cspSource} data: https://at.alicdn.com https://fonts.gstatic.com;
-                 script-src 'nonce-${nonce}' https://at.alicdn.com;
+                 script-src 'nonce-${nonce}' https://at.alicdn.com https://registry.npmmirror.com;
                  connect-src ${cspSource} data: blob:;
                  worker-src ${cspSource} blob:;" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -292,13 +358,10 @@ class RemonsMarkdownEditorProvider implements vscode.CustomTextEditorProvider {
   }
 }
 
-function getEditorConfig(resource: vscode.Uri): EditorConfig {
-  const cfg = vscode.workspace.getConfiguration('remonsMarkdownEditor', resource);
-  return {
-    showPreview: cfg.get<boolean>('showPreview', true),
-    fullscreen: cfg.get<boolean>('fullscreen', false),
-    defaultMode: cfg.get<ViewMode>('defaultMode', 'preview'),
-  };
+function getConfiguredTheme(): ThemeMode {
+  return vscode.workspace
+    .getConfiguration('remonsMarkdownEditor')
+    .get<ThemeMode>('theme', 'dark');
 }
 
 function getNonce(): string {
