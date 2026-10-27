@@ -157,7 +157,8 @@ function App() {
     () => savedState.immersive ?? false
   );
   // 回到顶部按钮监听的实际滚动容器：用 querySelector 定位
-  // - preview：滚动在内容区 .preview-only-content（外层只做 TOC 定位基准）
+  // - preview：滚动发生在全宽外层 .preview-only（滚动条贴视口右缘），
+  //   内层 .preview-only-content 只做 960px 居中排版
   // - edit：滚动发生在组件库预览面板 .preview 内部
   const queryBackTopTarget = (selector: string) =>
     document.querySelector<HTMLElement>(selector) ?? undefined;
@@ -347,14 +348,14 @@ function App() {
       <div className="preview-only">
         <div className="preview-only-content">
           {/* backTopTarget 在挂载时即被监听，必须等 querySelector 命中滚动容器后再渲染 */}
-          {queryBackTopTarget('.preview-only-content') && (
+          {queryBackTopTarget('.preview-only') && (
             <RenderMarkdown
               content={text}
               isSlotMermaid
               defaultCollapsed={false}
               showBackTop
               showToc
-              backTopTarget={queryBackTopTarget('.preview-only-content')}
+              backTopTarget={queryBackTopTarget('.preview-only')}
             />
           )}
         </div>
@@ -398,6 +399,7 @@ function App() {
           defaultCollapsed: false,
           showBackTop: editBackTop !== undefined,
           showToc: true,
+          incremental: true,
           backTopTarget: editBackTop ?? undefined,
         }}
       />

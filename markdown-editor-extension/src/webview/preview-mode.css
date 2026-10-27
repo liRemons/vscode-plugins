@@ -1,19 +1,18 @@
 /* 只读预览 / 可视化编辑双模式的容器与切换按钮样式 */
 
-/* 只读预览：外层只做定位基准（TOC 按钮/侧边栏固定），滚动在内容区 */
+/* 只读预览：滚动在全宽外层 .preview-only 上（滚动条贴视口右缘），
+   内层内容区仅负责 960px 居中排版，TOC 按钮/侧边栏相对外层定位 */
 .preview-only {
   position: relative;
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow: auto;
   background: var(--remons-md-editor-bg-primary, var(--vscode-editor-background));
   color: var(--remons-md-editor-color-text, var(--vscode-editor-foreground));
 }
 
 .preview-only-content {
-  height: 100%;
   box-sizing: border-box;
-  overflow: auto;
   max-width: 960px;
   margin: 0 auto;
   padding: 24px 40px 96px;
@@ -24,6 +23,31 @@
 .preview-only .markdown {
   background: transparent;
   color: inherit;
+}
+
+/* TOC 按钮/面板在组件库内是 position:absolute，相对滚动容器定位，
+   滚动改为全宽 .preview-only 后会随正文滚走；这里改为 fixed 锚住视口，
+   横向位置仍跟随居中的 960px 正文列（窄面板下用 max() 兜底贴右缘） */
+.preview-only .md-toc-toggle {
+  position: fixed;
+  top: 50px;
+  right: max(10px, calc((100vw - 960px) / 2 + 10px));
+}
+
+.preview-only .md-toc-sidebar {
+  position: fixed;
+  top: 100px;
+  right: max(24px, calc((100vw - 960px) / 2 + 24px));
+}
+
+/* 任务列表复选框：组件库只定义了尺寸，配色会被 VSCode 注入的 webview 基础样式接管
+   （深色 --vscode-checkbox-background + disabled 降不透明度），导致 IDE 内勾选状态难以辨认。
+   这里显式指定 accent-color，并用更高特异性（0-2-0）压过注入样式的直接背景声明；
+   同时抵消 disabled 的降低不透明度，保证预览/编辑两侧与浏览器表现一致 */
+.markdown .task-list-item-checkbox {
+  appearance: auto;
+  accent-color: var(--remons-markdown-color-primary, #1890ff);
+  opacity: 1;
 }
 
 /* Mermaid 节点/连线文字位于 foreignObject 内，会继承 .markdown p 的
