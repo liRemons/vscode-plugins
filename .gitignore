@@ -15,3 +15,6 @@ Thumbs.db
 
 # 工具临时目录
 .harness/
+
+# commit message 临时文件
+COMMIT_MSG.txt

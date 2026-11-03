@@ -5,11 +5,17 @@ import { createRoot } from 'react-dom/client';
 import { MarkdownEditor } from 'remons-markdown-editor';
 import type { MarkdownEditorRef } from 'remons-markdown-editor';
 import 'remons-markdown-editor/style.css';
+// 插件语法（tabs / 日历 / alerts 等）的样式独立打包，编辑器样式未内联
+import 'remons-markdown-plugins/style.css';
 import hljs from 'highlight.js';
 import RenderMarkdown, {
   initHighlighter,
   languagesCommon,
 } from 'remons-render-markdown';
+// TOC 目录按钮/侧边栏、回到顶部等样式在 render-markdown 自己的 style.css 里，
+// remons-markdown-editor/style.css 并未包含（构建时未内联），不导入的话
+// showToc 打开的面板会以无样式裸 DOM 呈现（近似不可见）
+import 'remons-render-markdown/style.css';
 import type {
   EditorConfig,
   ExtensionToWebviewMessage,
@@ -351,7 +357,7 @@ function App() {
           {queryBackTopTarget('.preview-only') && (
             <RenderMarkdown
               content={text}
-              isSlotMermaid
+              enableMermaid
               defaultCollapsed={false}
               showBackTop
               showToc
@@ -395,7 +401,7 @@ function App() {
         // defaultCollapsed=false 让图表默认展开，而不是只显示 36px 标题栏；
         // showBackTop / showToc / backTopTarget 经 previewOptions 透传给内部 RenderMarkdown
         previewOptions={{
-          isSlotMermaid: true,
+          enableMermaid: true,
           defaultCollapsed: false,
           showBackTop: editBackTop !== undefined,
           showToc: true,

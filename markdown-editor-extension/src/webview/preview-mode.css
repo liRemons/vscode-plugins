@@ -1,14 +1,24 @@
 /* 只读预览 / 可视化编辑双模式的容器与切换按钮样式 */
 
 /* 只读预览：滚动在全宽外层 .preview-only 上（滚动条贴视口右缘），
-   内层内容区仅负责 960px 居中排版，TOC 按钮/侧边栏相对外层定位 */
+   内层内容区仅负责 960px 居中排版。
+   .preview-only 保持 static（不作为定位父级），让绝对定位的 TOC 按钮/侧边栏沿
+   祖先链逐层上溢到不滚动的 #root（见下方 #root 规则）作为包含块：
+   这样 TOC 钉在面板顶部、正文滚动时不跟走，又不被 .preview-only 的 overflow 裁切
+   （CSS 规范：abs 元素的包含块若是某滚动容器的祖先，则该滚动容器不裁切它）。
+   全程不用 position:fixed；BackTop 为 fixed 不依赖这里，仍监听 .preview-only 滚动 */
 .preview-only {
-  position: relative;
+  position: static;
   flex: 1;
   min-height: 0;
   overflow: auto;
   background: var(--remons-md-editor-bg-primary, var(--vscode-editor-background));
   color: var(--remons-md-editor-color-text, var(--vscode-editor-foreground));
+}
+
+/* TOC 绝对定位上溢后的最终包含块：#root 铺满面板且不滚动（display:flex 不变） */
+#root {
+  position: relative;
 }
 
 .preview-only-content {
@@ -23,21 +33,11 @@
 .preview-only .markdown {
   background: transparent;
   color: inherit;
-}
-
-/* TOC 按钮/面板在组件库内是 position:absolute，相对滚动容器定位，
-   滚动改为全宽 .preview-only 后会随正文滚走；这里改为 fixed 锚住视口，
-   横向位置仍跟随居中的 960px 正文列（窄面板下用 max() 兜底贴右缘） */
-.preview-only .md-toc-toggle {
-  position: fixed;
-  top: 50px;
-  right: max(10px, calc((100vw - 960px) / 2 + 10px));
-}
-
-.preview-only .md-toc-sidebar {
-  position: fixed;
-  top: 100px;
-  right: max(24px, calc((100vw - 960px) / 2 + 24px));
+  /* 组件库给 .markdown 设了 position:relative，会把绝对定位的 TOC 收在居中内容列内
+     （右侧留白、不贴面板边）且随正文滚动。这里连同 .preview-only 一起改回 static，
+     使 TOC 包含块继续上溢到不滚动的 #root。代码块复制按钮、标题锚点各自有
+     position:relative，不依赖 .markdown，改此无副作用 */
+  position: static;
 }
 
 /* 任务列表复选框：组件库只定义了尺寸，配色会被 VSCode 注入的 webview 基础样式接管
@@ -105,9 +105,12 @@
   width: 32px;
   height: 32px;
   padding: 0;
-  /* 浅色主题下悬浮按钮与编辑区背景接近，补一层细边框（高对比度主题仍优先用 contrastBorder） */
+  /* 浅色主题下悬浮按钮与编辑区背景接近，补一层细边框。
+     描边色必须跟面板 data-theme（浅 #d0d7de / 深 #3a3f4b）而不是 --vscode-widget-border：
+     后者跟随 VSCode 窗口主题，与面板内独立切换的深浅主题不同步，
+     会出现「浅色按钮 + 深色(黑)边框」的错配。高对比度主题仍优先用 contrastBorder */
   border: 1px solid
-    var(--vscode-contrastBorder, var(--vscode-widget-border, rgba(128, 128, 128, 0.35)));
+    var(--vscode-contrastBorder, var(--remons-md-editor-color-border-light, rgba(128, 128, 128, 0.35)));
   border-radius: 50%;
   background: var(--remons-md-editor-bg-hover, var(--vscode-button-background));
   color: var(--remons-md-editor-color-text, var(--vscode-button-foreground));
