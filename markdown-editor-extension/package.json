@@ -226,8 +226,8 @@
     "katex": "^0.18.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "remons-markdown-editor": "^2.0.0-beta.9",
-    "remons-render-markdown": "^2.0.2-beta.5"
+    "remons-markdown-editor": "^2.0.0-beta.10",
+    "remons-render-markdown": "^2.0.2-beta.6"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
